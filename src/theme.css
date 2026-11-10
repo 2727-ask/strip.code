@@ -1,12 +1,44 @@
 /* StripCode theme: neon pink on deep plum, with marquee-style type.
    Shared by the panel, the progress bar and the buttons. */
 
-/* Fonts are bundled (not loaded from a CDN), so they work offline */
-@import '@fontsource/bebas-neue/latin-400.css';
-@import '@fontsource/pacifico/latin-400.css';
-@import '@fontsource/poppins/latin-400.css';
-@import '@fontsource/poppins/latin-500.css';
-@import '@fontsource/poppins/latin-600.css';
+/* Fonts are bundled (not loaded from a CDN), so they work offline. Declared here, woff2 only
+   (every browser that can run this site supports it), instead of importing the @fontsource
+   stylesheets, which would also ship an unused legacy .woff copy of each font. */
+@font-face {
+  font-family: 'Bebas Neue';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../node_modules/@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Pacifico';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../node_modules/@fontsource/pacifico/files/pacifico-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../node_modules/@fontsource/poppins/files/poppins-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../node_modules/@fontsource/poppins/files/poppins-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../node_modules/@fontsource/poppins/files/poppins-latin-600-normal.woff2') format('woff2');
+}
 
 :root {
   /* type: tall marquee capitals, a neon script for titles, a clean body face */

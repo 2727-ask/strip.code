@@ -1,0 +1,102 @@
+/* Layout of the site itself: the 3D scene and progress bar on the left, the problems
+ and code editor on the right. Loaded with the app, after the age gate. */
+
+/* 3D scene on the left, problems and code editor on the right */
+#app {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 46%);
+  height: 100%;
+}
+
+#stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Left side: the progress bar on top, the 3D view filling the rest */
+#stage {
+  display: flex;
+  flex-direction: column;
+}
+
+#viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#viewport canvas {
+  display: block;
+}
+
+#panel {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Round icon button, bottom-left corner of the scene */
+#controls {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 1;
+}
+
+#controls button {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 1.5px solid rgba(255, 45, 149, 0.75);
+  border-radius: 50%;
+  background: rgba(22, 10, 30, 0.72);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(255, 45, 149, 0.45), inset 0 0 10px rgba(255, 45, 149, 0.2);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+#controls button svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#controls button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff2d95 0%, #d63bd0 60%, #b14cff 100%);
+  border-color: #ff8cc6;
+  box-shadow: 0 0 24px rgba(255, 45, 149, 0.85);
+}
+
+#controls button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+#controls button:focus-visible {
+  outline: 2px solid #ff8cc6;
+  outline-offset: 3px;
+}
+
+#controls button:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Small screens: scene on top, problems below */
+@media (max-width: 900px) {
+  #app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 42% minmax(0, 1fr);
+  }
+}

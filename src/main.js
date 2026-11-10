@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
@@ -9,9 +8,12 @@ import {
   RENDERER, LIGHTS, STAGE, ANIMATION, UI, MATERIALS, NEON,
 } from './config.js';
 import './theme.css'; // before the component styles so they can use its tokens
+import './app.css';
 import { initPanel } from './panel.js';
 import { initProgress } from './progress.js';
 import { createNeonSign } from './neon.js';
+import { loadClip } from './animations.js';
+import { setTask, fail } from './loading.js';
 
 // =====================================================
 // STATE
@@ -118,7 +120,6 @@ if (neon) scene.add(neon.group);
 // =====================================================
 // LOADERS
 // =====================================================
-const fbxLoader = new FBXLoader();
 const gltfLoader = new GLTFLoader();
 gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
@@ -129,7 +130,7 @@ function describeTexture(tex) {
   return String(src).slice(0, 60);
 }
 
-// FBX imports often come in see-through or one-sided; make every material
+// Imported models often come in see-through or one-sided; make every material
 // render the way the artist intended, per the MATERIALS settings.
 function fixMaterials(root) {
   if (MATERIALS.logInfo) console.log('--- Materials in dancer ---');
@@ -161,17 +162,12 @@ function fixMaterials(root) {
   });
 }
 
-// Loads .glb/.gltf or .fbx and returns the root object
-async function loadModel(url) {
-  if (/\.(glb|gltf)$/i.test(url)) {
-    const gltf = await gltfLoader.loadAsync(url);
-    return gltf.scene;
-  }
-  return fbxLoader.loadAsync(url);
-}
-
 async function loadDancer() {
-  const dancer = await loadModel(ASSETS.dancer);
+  const gltf = await gltfLoader.loadAsync(ASSETS.dancer, (event) => {
+    // leave the last few percent for parsing and building the meshes
+    if (event.lengthComputable) setTask('model', 0.95 * (event.loaded / event.total));
+  });
+  const dancer = gltf.scene;
   dancer.scale.setScalar(CHARACTER.scale);
 
   if (CHARACTER.logMeshNames) console.log('--- Meshes in dancer ---');
@@ -183,13 +179,14 @@ async function loadDancer() {
 
   fixMaterials(dancer);
   scene.add(dancer);
+  setTask('model', 1);
   return dancer;
 }
 
 // Mixamo clips assume the hips bone has an un-rotated parent. A GLB exported
 // from Blender wraps the skeleton in a rotated Armature node (+90° on X), so the
 // hips tracks must be re-expressed in that parent's frame or she lies on her
-// back. A no-op for models whose hips parent is already un-rotated (the FBX).
+// back. A no-op for models whose hips parent is already un-rotated.
 function retargetClip(clip, dancer) {
   const hips = dancer.getObjectByName(CHARACTER.rootBone);
   if (!hips?.parent) return clip;
@@ -216,22 +213,66 @@ function retargetClip(clip, dancer) {
   return clip;
 }
 
-async function loadAnimations(mixer) {
-  const actions = {};
-  const clips = new Map(); // url -> retargeted clip: parse each file once, even if keys share it
-  for (const [name, url] of Object.entries(ASSETS.animations)) {
-    try {
-      if (!clips.has(url)) {
-        const file = await fbxLoader.loadAsync(url);
-        clips.set(url, retargetClip(file.animations[0], state.dancer));
+// Download every distinct clip file once, all in parallel (keys that share a file
+// share the download). A clip that fails is skipped, not fatal.
+async function downloadClips() {
+  const urls = [...new Set(Object.values(ASSETS.animations))];
+  const done = new Map(urls.map((url) => [url, 0]));
+  const report = () => setTask('animations', [...done.values()].reduce((sum, f) => sum + f, 0) / urls.length);
+
+  const clips = new Map();
+  await Promise.all(
+    urls.map(async (url) => {
+      try {
+        clips.set(url, await loadClip(url, (fraction) => (done.set(url, fraction), report())));
+      } catch (error) {
+        console.warn(`Animation missing: ${url}`, error);
       }
-      // Clone so each key gets its own action (a shared clip would share one action)
-      actions[name] = mixer.clipAction(clips.get(url).clone());
-    } catch {
+      done.set(url, 1);
+      report();
+    })
+  );
+  return clips;
+}
+
+// Needs the dancer (the clips are corrected for her skeleton), so it runs after both loads
+function buildActions(mixer, clips) {
+  const actions = {};
+  const retargeted = new Set(); // correct each clip once, even if several keys share it
+  for (const [name, url] of Object.entries(ASSETS.animations)) {
+    const clip = clips.get(url);
+    if (!clip) {
       console.warn(`Animation missing: ${name} (${url})`);
+      continue;
     }
+    if (!retargeted.has(url)) {
+      retargetClip(clip, state.dancer);
+      retargeted.add(url);
+    }
+    // Clone so each key gets its own action (a shared clip would share one action)
+    actions[name] = mixer.clipAction(clip.clone());
   }
   return actions;
+}
+
+// The fonts are already in the page's CSS; fetch them now so text never pops in later
+function loadFonts() {
+  const faces = ['18px "Bebas Neue"', '26px "Pacifico"', '400 14px "Poppins"', '500 14px "Poppins"', '600 14px "Poppins"'];
+  return Promise.all(faces.map((face) => document.fonts.load(face)))
+    .catch(() => {}) // a missing font falls back to a system one: not worth blocking on
+    .then(() => setTask('fonts', 1));
+}
+
+// Compile every shader and draw a couple of frames now, while the age gate is still
+// covering the page, so the first thing she does on screen is not a stutter.
+async function warmUp() {
+  try {
+    await renderer.compileAsync(scene, camera);
+  } catch {
+    /* the first frames will compile what is missing */
+  }
+  const twoFrames = new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  await Promise.race([twoFrames, new Promise((resolve) => setTimeout(resolve, 1500))]); // a hidden tab pauses frames
 }
 
 // =====================================================
@@ -414,14 +455,10 @@ function updateDanceButton() {
   danceButton.setAttribute('aria-label', label);
 }
 
-function hideLoading() {
-  document.getElementById(UI.loadingId)?.remove();
-}
-
+// Anything that stops the site from starting is reported to the age gate, which shows it
 function showError(error) {
   console.error(error);
-  const loading = document.getElementById(UI.loadingId);
-  if (loading) loading.textContent = `Error loading: ${error.message}`;
+  fail(error);
 }
 
 // =====================================================
@@ -434,12 +471,18 @@ function hasSkeleton(root) {
 }
 
 async function init() {
-  state.dancer = await loadDancer();
+  loadFonts(); // in parallel with everything below
 
-  // Static meshes (e.g. girl.glb) can't play the Mixamo clips or strip garments
+  // The model and the dance clips download side by side
+  const [dancer, clips] = await Promise.all([loadDancer(), downloadClips()]);
+  state.dancer = dancer;
+
+  // Static meshes can't play the Mixamo clips or have garments taken off
   if (!hasSkeleton(state.dancer)) {
     console.warn('Model has no skeleton: dance and strip animations are disabled.');
-    hideLoading();
+    setTask('animations', 1);
+    await warmUp();
+    setTask('scene', 1);
     return;
   }
 
@@ -450,15 +493,17 @@ async function init() {
   });
   state.mixer.addEventListener('loop', (e) => onDanceLoop(e.action));
 
-  state.actions = await loadAnimations(state.mixer);
+  state.actions = buildActions(state.mixer, clips);
   state.strips = prepareStrips(state.dancer);
 
   state.danceIndex = 0;
   playAnimation(availableDances()[0]);
   updateDanceButton();
   setDanceButton(canChangeDance());
-  hideLoading();
   processStripQueue(); // a problem may have been solved before the model finished loading
+
+  await warmUp();
+  setTask('scene', 1); // the last task: the age gate lifts once this and everything else is done
 }
 
 // =====================================================

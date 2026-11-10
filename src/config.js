@@ -1,22 +1,27 @@
 // =====================================================
 // ASSET PATHS
-// Files live in the /public folder; paths start from there.
+// Files live in the /public folder; paths start from there. They are resolved
+// against the page, so the site works from any URL path, e.g. a GitHub Pages
+// project site served from /<repo>/ (see `base` in vite.config.js).
 // =====================================================
-export const ASSETS = {
-  dancer: '/models/girl.glb',
-  // dancer: '/models/girl1.fbx',    // older FBX version: use with CHARACTER.scale = 0.01
+const asset = (path) => new URL(import.meta.env.BASE_URL + path, document.baseURI).href;
 
+export const ASSETS = {
+  dancer: asset('models/girl.glb'),
+
+  // Dance clips are small .json files made from the Mixamo .fbx originals in
+  // source-assets/animations by `npm run convert:animations`.
   animations: {
-    Dance_1: '/animations/dance1.fbx',
-    Dance_2: '/animations/dance2.fbx',
-    Dance_4: '/animations/dance4.fbx',
-    Dance_5: '/animations/dance5.fbx',
+    Dance_1: asset('animations/dance1.json'),
+    Dance_2: asset('animations/dance2.json'),
+    Dance_4: asset('animations/dance4.json'),
+    Dance_5: asset('animations/dance5.json'),
     // Strip clips: all placeholders (dance3) until dedicated ones exist. Point any of
-    // these at its own file; a file shared by several keys is only parsed once.
-    Strip_Bra: '/animations/dance3.fbx',
-    Strip_Panties: '/animations/dance3.fbx',
-    Strip_Belt: '/animations/dance3.fbx',
-    Strip_Stockings: '/animations/dance3.fbx',
+    // these at its own file; a file shared by several keys is only downloaded once.
+    Strip_Bra: asset('animations/dance3.json'),
+    Strip_Panties: asset('animations/dance3.json'),
+    Strip_Belt: asset('animations/dance3.json'),
+    Strip_Stockings: asset('animations/dance3.json'),
   },
 };
 
@@ -67,10 +72,10 @@ export const STRIP_SEQUENCE = [
 // CHARACTER
 // =====================================================
 export const CHARACTER = {
-  scale: 1,               // models/girl.glb already has its own 0.01 armature scale; girl1.fbx needs 0.01
+  scale: 1,               // models/girl.glb already has its own 0.01 armature scale
   castShadow: true,
   rootBone: 'mixamorigHips',   // bone whose parent frame the clips are corrected for
-  logMeshNames: true,     // print mesh names to the browser console
+  logMeshNames: false,    // print mesh names to the browser console (handy when adding garments)
 };
 
 // =====================================================
@@ -159,7 +164,6 @@ export const UI = {
   progressId: 'progress',      // progress bar at the top of the scene
   danceButtonId: 'danceBtn',
   danceText: 'Change Dance',   // button tooltip; the dance number, e.g. "(2/4)", is appended
-  loadingId: 'loading',
 };
 
 // =====================================================

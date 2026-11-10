@@ -2,140 +2,80 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>StripCode</title>
+    <meta name="description" content="StripCode: solve coding problems to make her strip. Adults only (18+).">
+    <meta name="rating" content="adult">
+    <meta name="theme-color" content="#0a030f">
+    <meta name="color-scheme" content="dark">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+    <!-- Critical styles, inline so nothing flashes white or shows before the age gate -->
     <style>
         html, body {
             margin: 0;
             height: 100%;
             overflow: hidden;
-            background: #120612;
+            background: #0a030f;
             font-family: 'Poppins', system-ui, sans-serif;
         }
 
-        /* 3D scene on the left, problems and code editor on the right */
-        #app {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(420px, 46%);
-            height: 100%;
-        }
-
-        #stage {
-            position: relative;
-            min-width: 0;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        /* Left side: the progress bar on top, the 3D view filling the rest */
-        #stage {
-            display: flex;
-            flex-direction: column;
-        }
-
-        #viewport {
-            position: relative;
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        #viewport canvas {
-            display: block;
-        }
-
-        #panel {
-            min-width: 0;
-            min-height: 0;
-        }
-
-        /* Round icon button, bottom-left corner of the scene */
-        #controls {
-            position: absolute;
-            left: 20px;
-            bottom: 20px;
-            z-index: 1;
-        }
-
-        #controls button {
-            display: grid;
-            place-items: center;
-            width: 52px;
-            height: 52px;
-            padding: 0;
-            border: 1.5px solid rgba(255, 45, 149, 0.75);
-            border-radius: 50%;
-            background: rgba(22, 10, 30, 0.72);
-            color: #fff;
-            cursor: pointer;
-            box-shadow: 0 0 14px rgba(255, 45, 149, 0.45), inset 0 0 10px rgba(255, 45, 149, 0.2);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-        }
-
-        #controls button svg {
-            width: 24px;
-            height: 24px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        #controls button:hover:not(:disabled) {
-            background: linear-gradient(135deg, #ff2d95 0%, #d63bd0 60%, #b14cff 100%);
-            border-color: #ff8cc6;
-            box-shadow: 0 0 24px rgba(255, 45, 149, 0.85);
-        }
-
-        #controls button:active:not(:disabled) {
-            transform: scale(0.92);
-        }
-
-        #controls button:focus-visible {
-            outline: 2px solid #ff8cc6;
-            outline-offset: 3px;
-        }
-
-        #controls button:disabled {
-            opacity: 0.45;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
-
-        #loading {
-            position: absolute;
-            top: 14px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #ffb3dc;
-            font: 400 18px/1 'Bebas Neue', Impact, sans-serif;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(255, 45, 149, 0.8);
-            z-index: 1;
-        }
-
-        /* Small screens: scene on top, problems below */
-        @media (max-width: 900px) {
-            #app {
-                grid-template-columns: minmax(0, 1fr);
-                grid-template-rows: 42% minmax(0, 1fr);
-            }
+        /* The site loads in the background, laid out but invisible, until the gate lifts */
+        body:not(.entered) #app {
+            visibility: hidden;
         }
     </style>
 </head>
 <body>
+    <!-- The age gate: the only thing that loads before the visitor says yes -->
+    <div id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title" data-state="ask">
+        <div class="gate-glow" aria-hidden="true"></div>
+
+        <div class="gate-inner">
+            <!-- the flickering neon sign is drawn here by gate.js -->
+            <div id="gate-sign" class="gate-sign" role="img" aria-label="StripCode"></div>
+
+            <section class="gate-view" data-view="ask">
+                <h1 id="gate-title" tabindex="-1">Are you over 18?</h1>
+                <p class="gate-note">StripCode is for adults only. Enter only if you are 18 or older.</p>
+                <div class="gate-actions">
+                    <button id="gate-yes" class="gate-btn yes" type="button">Yes, I'm 18+</button>
+                    <button id="gate-no" class="gate-btn no" type="button">No, take me out</button>
+                </div>
+            </section>
+
+            <section class="gate-view" data-view="load" hidden>
+                <h1 class="gate-heading">Getting the stage ready</h1>
+                <div class="neon-bar" role="progressbar" aria-labelledby="gate-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <i></i>
+                </div>
+                <p class="gate-status"><span id="gate-label">Starting</span><b id="gate-percent">0%</b></p>
+            </section>
+
+            <section class="gate-view" data-view="denied" hidden>
+                <h1 class="gate-heading">Come back when you're 18</h1>
+                <p class="gate-note">Sorry, StripCode is only for adults.</p>
+            </section>
+
+            <section class="gate-view" data-view="error" hidden>
+                <h1 class="gate-heading">Something went wrong</h1>
+                <p class="gate-note" id="gate-error-text">The site could not finish loading.</p>
+                <div class="gate-actions">
+                    <button id="gate-retry" class="gate-btn yes" type="button">Try again</button>
+                </div>
+            </section>
+
+            <noscript><p class="gate-note">StripCode needs JavaScript to run.</p></noscript>
+        </div>
+    </div>
+
+    <!-- The site itself. It starts loading when the visitor confirms their age. -->
     <div id="app">
         <div id="stage">
             <div id="progress"></div>
 
             <!-- the 3D canvas is added here -->
             <div id="viewport">
-                <div id="loading">Loading model...</div>
-
                 <div id="controls">
                     <button id="danceBtn" type="button" title="Change Dance" aria-label="Change Dance" disabled>
                         <!-- music note -->
@@ -152,6 +92,6 @@
         <aside id="panel"></aside>
     </div>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/gate.js"></script>
 </body>
 </html>

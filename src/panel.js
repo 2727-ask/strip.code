@@ -14,6 +14,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { PROBLEMS } from './problems.js';
 import { PYTHON, UI } from './config.js';
 import { PythonRunner } from './runner.js';
+import { creep, setTask, skipTask } from './loading.js';
 
 // =====================================================
 // SMALL HELPERS
@@ -116,6 +117,13 @@ export function initPanel({ onSolved = () => {} } = {}) {
         error: 'Python failed to load. Check your connection; Run will retry.',
       }[status];
       if (status === 'error' && detail) runtimeLabel.title = detail;
+
+      // Python is part of what the age gate waits for. If it cannot be downloaded the
+      // site still opens (Run will retry), it is not worth blocking everything on.
+      if (status === 'loading') creep('python', 0.92, 6);
+      else if (status === 'ready') setTask('python', 1);
+      else if (status === 'error') skipTask('python', detail);
+
       updateControls();
     },
   });

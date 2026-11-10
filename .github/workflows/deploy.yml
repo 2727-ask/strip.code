@@ -1,0 +1,77 @@
+name: Build and deploy to GitHub Pages
+
+on:
+  # Every push to main builds the site and publishes it
+  push:
+    branches: [main]
+  # Pull requests into main only build (a check that it still compiles); they never deploy
+  pull_request:
+    branches: [main]
+  # Lets you re-run a deploy by hand from the Actions tab
+  workflow_dispatch:
+
+# Needed by the deploy job (GitHub Pages + its OIDC token). Nothing else is writable.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time. A newer push waits its turn, and replaces any run still queued,
+# but never cancels a deploy that is already in progress.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22 # Vite 8 needs Node 20.19+ or 22.12+
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # The site is a few MB. If it suddenly is not, something large (a raw model, a
+      # source file) ended up in public/ and would be shipped to every visitor.
+      - name: Check the size of the site
+        run: |
+          size_mb=$(du -sm dist | cut -f1)
+          {
+            echo "### Built site: ${size_mb} MB"
+            echo
+            echo '| Size | File |'
+            echo '|---:|---|'
+            find dist -type f -printf '%s %P\n' | sort -rn | head -8 | awk '{ printf "| %.0f KB | %s |\n", $1/1024, $2 }'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$size_mb" -gt 30 ]; then
+            echo "::error::The built site is ${size_mb} MB (limit 30 MB). Is something large in public/?"
+            exit 1
+          fi
+
+      - name: Upload the site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
