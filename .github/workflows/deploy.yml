@@ -40,8 +40,9 @@ jobs:
       - name: Build
         run: npm run build
 
-      # The site is a few MB. If it suddenly is not, something large (a raw model, a
-      # source file) ended up in public/ and would be shipped to every visitor.
+      # The site is about 23 MB, of which 14 MB are the songs (streamed, so a visitor only
+      # downloads what they hear). If it suddenly grows much past that, something large
+      # (a raw model, an unshrunk song) ended up in public/.
       - name: Check the size of the site
         run: |
           size_mb=$(du -sm dist | cut -f1)
@@ -52,8 +53,8 @@ jobs:
             echo '|---:|---|'
             find dist -type f -printf '%s %P\n' | sort -rn | head -8 | awk '{ printf "| %.0f KB | %s |\n", $1/1024, $2 }'
           } >> "$GITHUB_STEP_SUMMARY"
-          if [ "$size_mb" -gt 30 ]; then
-            echo "::error::The built site is ${size_mb} MB (limit 30 MB). Is something large in public/?"
+          if [ "$size_mb" -gt 40 ]; then
+            echo "::error::The built site is ${size_mb} MB (limit 40 MB). Is something large in public/?"
             exit 1
           fi
 

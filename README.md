@@ -26,7 +26,7 @@ After the first run the site is at `https://<user>.github.io/<repo>/`.
 
 The build uses relative URLs (`base: './'` in `vite.config.js`), so it works from that sub-path, from a
 custom domain, or from a local preview without any change. The workflow fails if the built site grows past
-30 MB, which would mean something large ended up in `public/`.
+40 MB (it is about 23 MB), which would mean something large ended up in `public/`.
 
 ## How loading works
 
@@ -45,13 +45,13 @@ When the gate lifts, the stage is already set and everything starts at once:
   straight into her first dance. The clip's forward travel is taken out and replaced by moving her across
   the stage in step with the clip, so her feet don't slide. Tune or switch it off with `ENTRANCE` in
   `src/config.js`.
-- **Music.** A playlist of four tracks plays in the background, made live in the browser by a small
-  synthesiser (`src/music.js`), so there are no audio files to download or license. The first track opens
-  slow, muffled and quiet with only the pad, then the bass, hats, kick, clap and melody join in while the
-  tempo and brightness climb to the track's real sound (about 45 seconds); later tracks start at full
-  strength. The round speaker button, bottom-left, mutes it (remembered between visits). Browsers only
-  allow sound after a click, which is why the music starts from the age gate's "Yes". Tune it with `MUSIC`
-  in `src/config.js`.
+- **Music.** The songs play one after another behind the show, and start over from the first when the
+  last one ends, for as long as the page is open. The first song opens slow, muffled and quiet, then speeds
+  up, brightens and swells to the song as recorded (about 40 seconds); every later song fades in at full
+  strength. Songs are streamed, so a visitor only downloads the ones they hear. The round speaker button,
+  bottom-left, mutes it (remembered between visits), and it pauses while the tab is in the background.
+  Browsers only allow sound after a click, which is why the music is unlocked by the age gate's "Yes".
+  Tune it, or add a song, with `MUSIC` in `src/config.js`.
 
 ## Assets
 
@@ -61,12 +61,21 @@ Only what the site needs lives in `public/` (it is shipped as is):
 |---|---|
 | `public/models/girl.glb` | the dancer |
 | `public/animations/*.json` | the walk, dance and strip moves (small, gzipped by Pages) |
+| `public/music/*.mp3` | the songs, shrunk for the web (about 14 MB, streamed while playing) |
 
 The dance moves start as Mixamo `.fbx` files in `source-assets/animations/` (3–4 MB each, mostly a textured
 character the site does not use). After changing or adding one, regenerate the small JSON versions:
 
 ```bash
 npm run convert:animations
+```
+
+The songs start as the `.mp3` files in `source-assets/songs/`. Anything above 96 kbps is re-encoded down
+to it (a song already at or below that is copied as is). After changing or adding one, run the converter
+(it needs `ffmpeg` installed) and list the song in `MUSIC.tracks`:
+
+```bash
+npm run convert:songs
 ```
 
 `source-assets/` is kept in git but never deployed.
@@ -81,4 +90,4 @@ npm run convert:animations
 | `src/panel.js` | the problem panel and the code editor |
 | `src/runner.js`, `src/pyodide.worker.js` | running Python safely, with a time limit |
 | `src/gate.js`, `src/loading.js` | the age gate and the loading progress |
-| `src/music.js` | the background music: synthesiser, sequencer, playlist, mute |
+| `src/music.js` | the background music: the song playlist, the opening build, mute |

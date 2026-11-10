@@ -146,19 +146,37 @@ export const NEON = {
 
 // =====================================================
 // MUSIC
-// Background music, played from the age gate's "Yes" onwards by a small built-in
-// synthesiser (music.js): a playlist of tracks, no audio files. The first track
-// opens slow, muffled and quiet, with one instrument at a time joining, and builds
-// to its real tempo and sound; the later tracks start at full strength.
+// Background music (music.js). It starts when the age gate lifts and the dancer
+// walks on, then plays these songs in order, over and over, for as long as the page is
+// open. The first song opens slow, muffled and quiet and builds to the song as recorded.
+//
+// The songs are the .mp3 files in source-assets/songs, shrunk for the web into
+// public/music by `npm run convert:songs`. They are streamed while playing, so a visitor
+// only downloads the ones they actually hear.
 // =====================================================
 export const MUSIC = {
   enabled: true,
-  volume: 0.4,            // 0–1: loudness once the intro has built up
+  volume: 0.8,            // 0–1: overall loudness once the opening build is over
+
+  // gain evens out the songs (measured with ffmpeg's loudness meter: they were recorded
+  // up to 7 dB apart); 1 = as recorded. Add a song: put its file in source-assets/songs,
+  // run the converter, add a line here.
+  tracks: [
+    { name: 'Song 1', url: asset('music/song1.mp3'), gain: 0.50 },
+    { name: 'Song 2', url: asset('music/song2.mp3'), gain: 0.90 },
+    { name: 'Song 3', url: asset('music/song3.mp3'), gain: 0.63 },
+    { name: 'Song 4', url: asset('music/song4.mp3'), gain: 0.42 },
+    { name: 'Song 5', url: asset('music/song5.mp3'), gain: 0.98 },
+    { name: 'Song 6', url: asset('music/song6.mp3'), gain: 0.50 },
+  ],
+
+  // The opening build of the first song. Set startTempo and startVolume to 1 and
+  // startCutoff to 20000 for no build at all.
   intro: {
-    bars: 12,             // length of the build, in bars (about 45 seconds)
-    startTempo: 0.55,     // opening speed as a fraction of the track's own (1 = full speed)
-    startCutoff: 380,     // Hz: the opening is dull, as if heard through a wall; it opens up to full brightness
-    startVolume: 0.3,     // opening loudness as a fraction of full (1 = no swell)
+    seconds: 40,          // how long it takes to reach the song as recorded
+    startTempo: 0.6,      // opening speed (1 = as recorded; keeps its pitch)
+    startCutoff: 400,     // Hz: the opening is dull, as if heard through a wall, then opens up
+    startVolume: 0.3,     // opening loudness as a fraction of full
     fadeSeconds: 5,       // fade in from silence
   },
 };
