@@ -15,10 +15,20 @@ import { PROBLEMS } from './problems.js';
 import { PYTHON, UI } from './config.js';
 import { PythonRunner } from './runner.js';
 import { creep, setTask, skipTask } from './loading.js';
+import { playSound } from './sounds.js';
 
 // =====================================================
 // SMALL HELPERS
 // =====================================================
+
+// Which sound effect goes with a finished run (names from SOUNDS.files in config.js):
+// all sample tests passed, the whole problem solved, or anything else
+function resultSound(kind, outcome, testCount) {
+  const allPassed = outcome.stage === 'done' && outcome.results.filter((r) => r && r.ok).length === testCount;
+  if (!allPassed) return 'error';
+  return kind === 'submit' ? 'solved' : 'testsPassed';
+}
+
 function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -403,12 +413,14 @@ export function initPanel({ onSolved = () => {} } = {}) {
       updateControls();
       resultsBox.innerHTML = '';
       showBanner('error', 'Python could not be loaded, so your code was not run. Check your internet connection and try again.');
+      playSound('error');
       return;
     }
 
     state.busy = false;
     const accepted = renderOutcome(kind, problem, tests, outcome);
     updateControls();
+    playSound(resultSound(kind, outcome, tests.length));
     if (accepted) markSolved(index);
   }
 

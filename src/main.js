@@ -15,6 +15,7 @@ import { createNeonSign } from './neon.js';
 import { loadClip } from './animations.js';
 import { setTask, fail, revealed } from './loading.js';
 import { music } from './music.js';
+import { preloadSounds } from './sounds.js';
 
 // =====================================================
 // STATE
@@ -532,12 +533,14 @@ function updateDanceButton() {
 }
 
 // The music itself starts from the age gate (a click is needed before a browser allows
-// sound); this button just mutes and unmutes it. Its tooltip names the track playing.
+// sound); this button just mutes and unmutes all sound, the sound effects too. Its
+// tooltip names the song playing.
 const musicButton = document.getElementById(UI.musicButtonId);
 musicButton.hidden = !MUSIC.enabled;
 musicButton.addEventListener('click', () => music.toggle());
+preloadSounds(); // the test-result effects, ready before the first run
 music.onChange(({ muted, track }) => {
-  const label = muted ? 'Play music' : 'Mute music';
+  const label = muted ? 'Play sound' : 'Mute sound';
   musicButton.dataset.muted = String(muted);
   musicButton.title = track && !muted ? `${label} · ${track}` : label;
   musicButton.setAttribute('aria-label', label);

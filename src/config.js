@@ -151,7 +151,7 @@ export const NEON = {
 // open. The first song opens slow, muffled and quiet and builds to the song as recorded.
 //
 // The songs are the .mp3 files in source-assets/songs, shrunk for the web into
-// public/music by `npm run convert:songs`. They are streamed while playing, so a visitor
+// public/music by `npm run convert:audio`. They are streamed while playing, so a visitor
 // only downloads the ones they actually hear.
 // =====================================================
 export const MUSIC = {
@@ -178,6 +178,22 @@ export const MUSIC = {
     startCutoff: 400,     // Hz: the opening is dull, as if heard through a wall, then opens up
     startVolume: 0.3,     // opening loudness as a fraction of full
     fadeSeconds: 5,       // fade in from silence
+  },
+};
+
+// =====================================================
+// SOUND EFFECTS
+// Played when test results come back (sounds.js). They are the .mp3 files in
+// source-assets/sounds, brought to one loudness by `npm run convert:audio` into
+// public/sounds. They use the music's audio, so the speaker button mutes them too,
+// and turning MUSIC.enabled off silences them as well.
+// =====================================================
+export const SOUNDS = {
+  volume: 1,              // 0–1 (the files are already loudness-matched to the music)
+  files: {
+    testsPassed: asset('sounds/success2.mp3'), // "Run visible tests": the sample tests all passed
+    solved: asset('sounds/success1.mp3'),      // "Submit": every test passed, the problem is solved
+    error: asset('sounds/error.mp3'),          // anything else: wrong answer, error in the code, time limit
   },
 };
 

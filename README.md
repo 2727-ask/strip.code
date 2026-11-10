@@ -49,9 +49,13 @@ When the gate lifts, the stage is already set and everything starts at once:
   last one ends, for as long as the page is open. The first song opens slow, muffled and quiet, then speeds
   up, brightens and swells to the song as recorded (about 40 seconds); every later song fades in at full
   strength. Songs are streamed, so a visitor only downloads the ones they hear. The round speaker button,
-  bottom-left, mutes it (remembered between visits), and it pauses while the tab is in the background.
-  Browsers only allow sound after a click, which is why the music is unlocked by the age gate's "Yes".
+  bottom-left, mutes all sound (remembered between visits), and it pauses while the tab is in the background.
+  Browsers only allow sound after a click, which is why the sound is unlocked by the age gate's "Yes".
   Tune it, or add a song, with `MUSIC` in `src/config.js`.
+- **Sound effects.** When test results come back: one sound when **Run visible tests** passes all the sample
+  tests, another when **Submit** passes everything (the problem is solved), and an error sound for anything
+  else (wrong answer, an error in the code, the time limit). They are tiny and play through the same audio
+  as the music, so the speaker button mutes them too. See `SOUNDS` in `src/config.js`.
 
 ## Assets
 
@@ -62,6 +66,7 @@ Only what the site needs lives in `public/` (it is shipped as is):
 | `public/models/girl.glb` | the dancer |
 | `public/animations/*.json` | the walk, dance and strip moves (small, gzipped by Pages) |
 | `public/music/*.mp3` | the songs, shrunk for the web (about 14 MB, streamed while playing) |
+| `public/sounds/*.mp3` | the sound effects for test results (about 70 KB in all) |
 
 The dance moves start as Mixamo `.fbx` files in `source-assets/animations/` (3–4 MB each, mostly a textured
 character the site does not use). After changing or adding one, regenerate the small JSON versions:
@@ -70,12 +75,14 @@ character the site does not use). After changing or adding one, regenerate the s
 npm run convert:animations
 ```
 
-The songs start as the `.mp3` files in `source-assets/songs/`. Anything above 96 kbps is re-encoded down
-to it (a song already at or below that is copied as is). After changing or adding one, run the converter
-(it needs `ffmpeg` installed) and list the song in `MUSIC.tracks`:
+The songs start as the `.mp3` files in `source-assets/songs/`, and the sound effects in
+`source-assets/sounds/`. Anything above 96 kbps is re-encoded down to it (a song already at or below that
+is copied as is), and each sound effect is brought to the same loudness, since they were recorded at very
+different volumes. After changing or adding any of them, run the converter (it needs `ffmpeg` installed),
+and list a new song in `MUSIC.tracks` or a new effect in `SOUNDS.files`:
 
 ```bash
-npm run convert:songs
+npm run convert:audio
 ```
 
 `source-assets/` is kept in git but never deployed.
@@ -91,3 +98,4 @@ npm run convert:songs
 | `src/runner.js`, `src/pyodide.worker.js` | running Python safely, with a time limit |
 | `src/gate.js`, `src/loading.js` | the age gate and the loading progress |
 | `src/music.js` | the background music: the song playlist, the opening build, mute |
+| `src/sounds.js` | the sound effects played when test results come back |

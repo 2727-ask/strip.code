@@ -161,6 +161,13 @@ export const music = {
     return currentTrack;
   },
 
+  // The audio context and the mute switch, for the sound effects (sounds.js), which
+  // play through the same speakers and obey the same button. null until unlocked, or
+  // if the browser has no Web Audio.
+  audio() {
+    return ctx ? { ctx, bus: fader } : null;
+  },
+
   // Browsers only allow sound after a click or key press. Call this from the handler
   // of one (the age gate's "Yes"), so the music can start later on its own. The first
   // song starts downloading and playing now, silently, so it is ready when the show begins.
