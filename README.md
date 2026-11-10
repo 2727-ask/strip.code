@@ -37,6 +37,22 @@ custom domain, or from a local preview without any change. The workflow fails if
 
 Progress is reported through `src/loading.js`.
 
+## The show
+
+When the gate lifts, the stage is already set and everything starts at once:
+
+- **Entrance.** The dancer walks on from the back of the stage to the middle (`walk.fbx`), then moves
+  straight into her first dance. The clip's forward travel is taken out and replaced by moving her across
+  the stage in step with the clip, so her feet don't slide. Tune or switch it off with `ENTRANCE` in
+  `src/config.js`.
+- **Music.** A playlist of four tracks plays in the background, made live in the browser by a small
+  synthesiser (`src/music.js`), so there are no audio files to download or license. The first track opens
+  slow, muffled and quiet with only the pad, then the bass, hats, kick, clap and melody join in while the
+  tempo and brightness climb to the track's real sound (about 45 seconds); later tracks start at full
+  strength. The round speaker button, bottom-left, mutes it (remembered between visits). Browsers only
+  allow sound after a click, which is why the music starts from the age gate's "Yes". Tune it with `MUSIC`
+  in `src/config.js`.
+
 ## Assets
 
 Only what the site needs lives in `public/` (it is shipped as is):
@@ -44,7 +60,7 @@ Only what the site needs lives in `public/` (it is shipped as is):
 | File | |
 |---|---|
 | `public/models/girl.glb` | the dancer |
-| `public/animations/*.json` | the dance and strip moves (small, gzipped by Pages) |
+| `public/animations/*.json` | the walk, dance and strip moves (small, gzipped by Pages) |
 
 The dance moves start as Mixamo `.fbx` files in `source-assets/animations/` (3–4 MB each, mostly a textured
 character the site does not use). After changing or adding one, regenerate the small JSON versions:
@@ -65,3 +81,4 @@ npm run convert:animations
 | `src/panel.js` | the problem panel and the code editor |
 | `src/runner.js`, `src/pyodide.worker.js` | running Python safely, with a time limit |
 | `src/gate.js`, `src/loading.js` | the age gate and the loading progress |
+| `src/music.js` | the background music: synthesiser, sequencer, playlist, mute |

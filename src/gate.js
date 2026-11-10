@@ -9,7 +9,8 @@
 import './theme.css';
 import './gate.css';
 import { layoutText } from './neonGlyphs.js';
-import { onProgress, ready, creep, setTask } from './loading.js';
+import { onProgress, ready, creep, setTask, reveal } from './loading.js';
+import { music } from './music.js';
 
 const SIGN_TEXT = 'StripCode';
 const SVG_PAD = 0.3;       // room around the letters for the glow
@@ -99,6 +100,8 @@ function renderProgress({ progress, label }) {
 
 function lift() {
   document.body.classList.add('entered'); // un-hides the site underneath
+  music.start();                          // the club opens: the intro build begins
+  reveal();                               // ...and the dancer makes her entrance
   gate.classList.add('leaving');
   gate.addEventListener('transitionend', () => gate.remove(), { once: true });
   setTimeout(() => gate.remove(), 1500); // in case the transition never fires
@@ -108,6 +111,7 @@ function lift() {
 // FLOW
 // =====================================================
 async function enter() {
+  music.unlock(); // browsers only allow sound after a click, and this is that click
   show('load');
   const stopListening = onProgress(renderProgress);
 

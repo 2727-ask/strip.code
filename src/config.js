@@ -16,6 +16,7 @@ export const ASSETS = {
     Dance_2: asset('animations/dance2.json'),
     Dance_4: asset('animations/dance4.json'),
     Dance_5: asset('animations/dance5.json'),
+    Walk: asset('animations/walk.json'),   // her entrance (see ENTRANCE)
     // Strip clips: all placeholders (dance3) until dedicated ones exist. Point any of
     // these at its own file; a file shared by several keys is only downloaded once.
     Strip_Bra: asset('animations/dance3.json'),
@@ -31,6 +32,15 @@ export const ASSETS = {
 // Dance loops she cycles through: the "Change Dance" button and each finished
 // strip both move on to the next one. Keys come from ASSETS.animations.
 export const DANCE_SEQUENCE = ['Dance_1', 'Dance_2', 'Dance_4', 'Dance_5'];
+
+// When the age gate lifts she walks on from the back of the stage to the middle, then
+// starts dancing. The walk clip goes forward by itself; its travel is taken out and
+// replaced by moving her across the stage in step with the clip, so her feet never slide.
+export const ENTRANCE = {
+  enabled: true,
+  animation: 'Walk',      // key from ASSETS.animations
+  endZ: 0,                // where she stops and starts to dance (metres; 0 = centre of the stage, positive = towards the camera)
+};
 
 // Garments in the order they come off. Each one simply disappears while its
 // strip clip plays: no grab, toss or fall.
@@ -135,6 +145,25 @@ export const NEON = {
 };
 
 // =====================================================
+// MUSIC
+// Background music, played from the age gate's "Yes" onwards by a small built-in
+// synthesiser (music.js): a playlist of tracks, no audio files. The first track
+// opens slow, muffled and quiet, with one instrument at a time joining, and builds
+// to its real tempo and sound; the later tracks start at full strength.
+// =====================================================
+export const MUSIC = {
+  enabled: true,
+  volume: 0.4,            // 0–1: loudness once the intro has built up
+  intro: {
+    bars: 12,             // length of the build, in bars (about 45 seconds)
+    startTempo: 0.55,     // opening speed as a fraction of the track's own (1 = full speed)
+    startCutoff: 380,     // Hz: the opening is dull, as if heard through a wall; it opens up to full brightness
+    startVolume: 0.3,     // opening loudness as a fraction of full (1 = no swell)
+    fadeSeconds: 5,       // fade in from silence
+  },
+};
+
+// =====================================================
 // STAGE
 // =====================================================
 export const STAGE = {
@@ -164,6 +193,7 @@ export const UI = {
   progressId: 'progress',      // progress bar at the top of the scene
   danceButtonId: 'danceBtn',
   danceText: 'Change Dance',   // button tooltip; the dance number, e.g. "(2/4)", is appended
+  musicButtonId: 'musicBtn',   // mute / unmute the music
 };
 
 // =====================================================

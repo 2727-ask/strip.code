@@ -37,12 +37,14 @@
   min-height: 0;
 }
 
-/* Round icon button, bottom-left corner of the scene */
+/* Round icon buttons, bottom-left corner of the scene */
 #controls {
   position: absolute;
   left: 20px;
   bottom: 20px;
   z-index: 1;
+  display: flex;
+  gap: 12px;
 }
 
 #controls button {
@@ -91,6 +93,29 @@
   opacity: 0.45;
   box-shadow: none;
   cursor: not-allowed;
+}
+
+#controls button[hidden] {
+  display: none;
+}
+
+/* the music button shows a speaker with waves, or crossed out once muted */
+#musicBtn .off {
+  display: none;
+}
+
+#musicBtn[data-muted='true'] .on {
+  display: none;
+}
+
+#musicBtn[data-muted='true'] .off {
+  display: block;
+}
+
+#musicBtn[data-muted='true']:not(:hover) {
+  color: var(--sc-muted);
+  border-color: rgba(255, 45, 149, 0.4);
+  box-shadow: none;
 }
 
 /* Small screens: scene on top, problems below */

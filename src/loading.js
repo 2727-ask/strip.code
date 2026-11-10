@@ -90,6 +90,17 @@ export function fail(error) {
   settle.reject(error instanceof Error ? error : new Error(String(error)));
 }
 
+// The age gate has lifted and the visitor can see the stage. The site loads and sets
+// itself up behind the gate, then waits for this before the show begins (the dancer's
+// entrance, for one), so the visitor sees it from the start.
+let openUp;
+export const revealed = new Promise((resolve) => (openUp = resolve));
+
+/** Called by the age gate the moment it lifts. */
+export function reveal() {
+  openUp();
+}
+
 /** Listen for progress. Returns a function that stops listening. */
 export function onProgress(listener) {
   listeners.add(listener);

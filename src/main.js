@@ -5,7 +5,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 
 import {
   ASSETS, DANCE_SEQUENCE, STRIP_SEQUENCE, CHARACTER, CAMERA,
-  RENDERER, LIGHTS, STAGE, ANIMATION, UI, MATERIALS, NEON,
+  RENDERER, LIGHTS, STAGE, ANIMATION, UI, MATERIALS, NEON, MUSIC, ENTRANCE,
 } from './config.js';
 import './theme.css'; // before the component styles so they can use its tokens
 import './app.css';
@@ -13,7 +13,8 @@ import { initPanel } from './panel.js';
 import { initProgress } from './progress.js';
 import { createNeonSign } from './neon.js';
 import { loadClip } from './animations.js';
-import { setTask, fail } from './loading.js';
+import { setTask, fail, revealed } from './loading.js';
+import { music } from './music.js';
 
 // =====================================================
 // STATE
@@ -29,6 +30,8 @@ const state = {
   stripIndex: 0,
   pendingStrips: 0,       // solved problems waiting for their strip to play
   activeStrip: null,
+  entrance: null,         // her walk onto the stage, while it lasts (see the ENTRANCE section)
+  walkTravel: 0,          // metres the walk clip carries her forward
 };
 
 // =====================================================
@@ -235,6 +238,30 @@ async function downloadClips() {
   return clips;
 }
 
+// The walk clip carries the hips forward along the stage (about 4 m in one pass).
+// Take that travel out so she walks on the spot, and return how far it was, in
+// metres; the entrance then moves her across the stage in step with the clip.
+// Runs on the raw clip, before retargetClip, while the hips z axis is still "forward".
+function takeOutTravel(clip, dancer) {
+  const track = clip.tracks.find((t) => t.name === `${CHARACTER.rootBone}.position`);
+  const hips = dancer.getObjectByName(CHARACTER.rootBone);
+  if (!track || !hips?.parent || track.times.length < 2) return 0;
+
+  const { times, values } = track;
+  const last = times.length - 1;
+  const start = values[2];
+  const travel = values[last * 3 + 2] - start;
+  const span = times[last] - times[0];
+  for (let i = 0; i <= last; i++) {
+    // leave the natural sway of the hips, drop the steady forward drift
+    values[i * 3 + 2] -= start + travel * ((times[i] - times[0]) / span);
+  }
+
+  dancer.updateMatrixWorld(true);
+  const unit = hips.parent.getWorldScale(new THREE.Vector3()).x; // clip units (cm) -> metres
+  return travel * unit;
+}
+
 // Needs the dancer (the clips are corrected for her skeleton), so it runs after both loads
 function buildActions(mixer, clips) {
   const actions = {};
@@ -246,6 +273,7 @@ function buildActions(mixer, clips) {
       continue;
     }
     if (!retargeted.has(url)) {
+      if (name === ENTRANCE.animation) state.walkTravel = takeOutTravel(clip, state.dancer);
       retargetClip(clip, state.dancer);
       retargeted.add(url);
     }
@@ -308,7 +336,7 @@ function canChangeDance() {
 // after each strip, and automatically (see onDanceLoop).
 function changeDance() {
   const dances = availableDances();
-  if (state.activeStrip || !dances.length) return;
+  if (state.activeStrip || state.entrance || !dances.length) return;
 
   state.danceIndex = (state.danceIndex + 1) % dances.length;
   state.danceLoops = 0; // a fresh dance, so the automatic change starts counting again
@@ -324,6 +352,54 @@ function onDanceLoop(action) {
 
   state.danceLoops += 1;
   if (state.danceLoops >= ANIMATION.loopsPerDance) changeDance();
+}
+
+// =====================================================
+// ENTRANCE
+// When the age gate lifts she walks from the back of the stage to the middle, then
+// starts to dance. Until then she waits at the start of the walk, behind the gate.
+// The walk clip plays on the spot; her position along the stage follows the clip's
+// own time, so her feet stay planted and she arrives exactly at ENTRANCE.endZ.
+// =====================================================
+function prepareEntrance() {
+  const action = ENTRANCE.enabled ? playAnimation(ENTRANCE.animation, { loop: false }) : null;
+  if (!action) return false;
+
+  action.paused = true; // held on the first frame until the stage is revealed
+  const endZ = ENTRANCE.endZ;
+  state.entrance = { action, startZ: endZ - state.walkTravel, endZ, handedOver: false };
+  state.dancer.position.z = state.entrance.startZ;
+
+  revealed.then(() => {
+    action.paused = false;
+  });
+  return true;
+}
+
+function updateEntrance() {
+  const entrance = state.entrance;
+  if (!entrance) return;
+
+  const { action } = entrance;
+  const duration = action.getClip().duration;
+  const progress = Math.min(action.time / duration, 1);
+  state.dancer.position.z = entrance.startZ + (entrance.endZ - entrance.startZ) * progress;
+
+  // start the first dance a moment early, so the walk melts into it
+  if (!entrance.handedOver && action.time >= duration - ANIMATION.crossFade) {
+    entrance.handedOver = true;
+    playAnimation(availableDances()[0]);
+  }
+
+  if (progress >= 1 || !action.enabled) finishEntrance();
+}
+
+function finishEntrance() {
+  state.dancer.position.z = state.entrance.endZ;
+  state.entrance = null;
+
+  setDanceButton(canChangeDance());
+  processStripQueue(); // a problem may have been solved while she was walking
 }
 
 // =====================================================
@@ -388,7 +464,7 @@ function requestStrip() {
 
 function processStripQueue() {
   const waiting = state.pendingStrips > 0;
-  const ready = !state.activeStrip && state.stripIndex < state.strips.length;
+  const ready = !state.activeStrip && !state.entrance && state.stripIndex < state.strips.length;
   if (!waiting || !ready) return;
 
   state.pendingStrips--;
@@ -455,6 +531,18 @@ function updateDanceButton() {
   danceButton.setAttribute('aria-label', label);
 }
 
+// The music itself starts from the age gate (a click is needed before a browser allows
+// sound); this button just mutes and unmutes it. Its tooltip names the track playing.
+const musicButton = document.getElementById(UI.musicButtonId);
+musicButton.hidden = !MUSIC.enabled;
+musicButton.addEventListener('click', () => music.toggle());
+music.onChange(({ muted, track }) => {
+  const label = muted ? 'Play music' : 'Mute music';
+  musicButton.dataset.muted = String(muted);
+  musicButton.title = track && !muted ? `${label} · ${track}` : label;
+  musicButton.setAttribute('aria-label', label);
+});
+
 // Anything that stops the site from starting is reported to the age gate, which shows it
 function showError(error) {
   console.error(error);
@@ -497,9 +585,10 @@ async function init() {
   state.strips = prepareStrips(state.dancer);
 
   state.danceIndex = 0;
-  playAnimation(availableDances()[0]);
+  // she walks on first (and dances from there); without the walk clip she just starts dancing
+  if (!prepareEntrance()) playAnimation(availableDances()[0]);
   updateDanceButton();
-  setDanceButton(canChangeDance());
+  setDanceButton(canChangeDance() && !state.entrance);
   processStripQueue(); // a problem may have been solved before the model finished loading
 
   await warmUp();
@@ -516,6 +605,7 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), ANIMATION.maxDelta);
 
   state.mixer?.update(dt);
+  updateEntrance();
   updateActiveStrip();
   progress.update(progressModel());
   neon?.update(clock.elapsedTime);
