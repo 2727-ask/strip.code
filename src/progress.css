@@ -1,0 +1,222 @@
+#progress {
+  --pink: var(--sc-pink);
+  --gold: var(--sc-gold);
+  --node: 44px;
+
+  /* docked above the 3D view, not floating over it */
+  flex: none;
+  box-sizing: border-box;
+  width: min(calc(100% - 24px), 460px);
+  margin: 14px auto 0;
+  padding: 12px 14px 10px;
+  color: #fff;
+  font: 400 12px/1.3 var(--sc-font-body);
+  background: rgba(22, 10, 30, 0.72);
+  border: 1px solid rgba(255, 45, 149, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 0 22px rgba(255, 45, 149, 0.16), inset 0 0 18px rgba(255, 45, 149, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#progress .steps {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#progress .step {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  transition: opacity 0.3s;
+}
+
+/* the line joining a stage to the next one */
+#progress .step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--node) / 2 - 1.5px);
+  left: calc(50% + var(--node) / 2 + 6px);
+  width: calc(100% - var(--node) - 12px);
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--pink) 0,
+    var(--sc-violet) var(--fill, 0%),
+    rgba(255, 255, 255, 0.16) var(--fill, 0%)
+  );
+}
+
+#progress .node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--node);
+  height: var(--node);
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  transition: background 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+#progress .node svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* marquee capitals */
+#progress .label {
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.55);
+  font: 400 15px/1 var(--sc-font-display);
+  letter-spacing: 0.1em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 0.3s, text-shadow 0.3s;
+}
+
+#progress .check {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  display: none;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--sc-gradient);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(255, 45, 149, 0.7);
+}
+
+/* later stages */
+#progress .step.upcoming {
+  opacity: 0.6;
+}
+
+/* the stage you are working towards: hot pink glow */
+#progress .step.current .node {
+  color: #fff;
+  background: rgba(255, 45, 149, 0.22);
+  border-color: var(--pink);
+  box-shadow: 0 0 0 4px rgba(255, 45, 149, 0.2), 0 0 20px rgba(255, 45, 149, 0.7);
+}
+
+#progress .step.current .label {
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255, 45, 149, 0.9);
+}
+
+/* solved, waiting for the strip in front of it to finish */
+#progress .step.queued .node {
+  color: #fff;
+  background: rgba(255, 45, 149, 0.14);
+  border-color: var(--pink);
+  border-style: dashed;
+}
+
+#progress .step.queued .label {
+  color: #fff;
+}
+
+/* the garment is coming off right now: a gold ring fills up to the moment it disappears */
+#progress .step.removing .node {
+  color: #fff;
+  background: rgba(255, 211, 107, 0.16);
+  border-color: transparent;
+  animation: progress-pulse 1.1s ease-in-out infinite;
+}
+
+#progress .step.removing .node::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(var(--gold) calc(var(--p, 0) * 1%), rgba(255, 255, 255, 0.2) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+}
+
+#progress .step.removing .label {
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(255, 211, 107, 0.7);
+}
+
+/* garment removed */
+#progress .step.done .node {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 45, 149, 0.14);
+  border-color: var(--sc-pink-soft);
+}
+
+#progress .step.done .check {
+  display: grid;
+}
+
+#progress .step.done .label {
+  color: var(--sc-pink-soft);
+}
+
+#progress .caption {
+  min-height: 1.4em;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  text-align: center;
+}
+
+@keyframes progress-pulse {
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 211, 107, 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #progress .step.removing .node {
+    animation: none;
+  }
+}
+
+/* Small screens: the scene area is short, so keep the bar compact. The text
+   labels are dropped (kept for screen readers); the caption names the stage. */
+@media (max-width: 480px) {
+  #progress {
+    --node: 34px;
+    margin-top: 8px;
+    padding: 8px 10px 6px;
+  }
+
+  #progress .node svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  #progress .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  #progress .caption {
+    margin-top: 6px;
+  }
+}

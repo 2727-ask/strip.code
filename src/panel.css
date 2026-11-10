@@ -1,0 +1,515 @@
+#panel {
+  /* local names, mapped onto the shared theme in theme.css */
+  --bg: var(--sc-plum-1);
+  --bg-2: var(--sc-plum-2);
+  --bg-3: var(--sc-plum-0);
+  --line: var(--sc-line);
+  --text: var(--sc-text);
+  --muted: var(--sc-muted);
+  --accent: var(--sc-pink);
+  --good: var(--sc-mint);
+  --bad: var(--sc-red);
+  --warn: var(--sc-gold);
+  --mono: var(--sc-font-mono);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg);
+  color: var(--text);
+  border-left: 1px solid var(--line);
+  font: 400 14px/1.65 var(--sc-font-body);
+  scrollbar-color: #6a3487 transparent;
+  scrollbar-width: thin;
+}
+
+#panel * {
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  #panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+/* ---------- tabs ---------- */
+#panel .tabs {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 8px 8px 0;
+  overflow-x: auto;
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+
+#panel .tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 7px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: 400 18px/1.2 var(--sc-font-display);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+#panel .tab:hover:not(:disabled) {
+  color: var(--sc-pink-soft);
+}
+
+#panel .tab.active {
+  color: #fff;
+  border-bottom-color: var(--accent);
+  text-shadow: 0 0 10px rgba(255, 45, 149, 0.75);
+  box-shadow: 0 6px 12px -8px rgba(255, 45, 149, 0.9);
+}
+
+#panel .tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#panel .tab-number {
+  display: inline-grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--sc-plum-3);
+  color: var(--sc-pink-soft);
+  font: 600 11px/1 var(--sc-font-body);
+  letter-spacing: 0;
+}
+
+#panel .tab.active .tab-number {
+  background: var(--accent);
+  color: #fff;
+}
+
+#panel .tab.solved .tab-number {
+  background: var(--sc-gradient);
+  color: #fff;
+}
+
+#panel .tab-title {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#panel .tab-mark {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+/* ---------- scrolling area ---------- */
+#panel .scroll {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  padding: 18px 16px 16px;
+  overflow-y: auto;
+}
+
+/* ---------- problem statement ---------- */
+#panel .problem-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+}
+
+/* the neon script title */
+#panel .problem-title {
+  margin: 0;
+  color: #fff;
+  font: 400 26px/1.35 var(--sc-font-script);
+  text-shadow: 0 0 6px rgba(255, 45, 149, 0.9), 0 0 18px rgba(255, 45, 149, 0.55), 0 0 34px rgba(255, 45, 149, 0.3);
+}
+
+#panel .pill {
+  padding: 2px 12px 1px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font: 400 15px/1.4 var(--sc-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+#panel .pill.easy {
+  color: var(--good);
+  background: rgba(62, 224, 161, 0.1);
+}
+
+#panel .pill.medium {
+  color: var(--warn);
+  background: rgba(255, 211, 107, 0.1);
+}
+
+#panel .pill.hard {
+  color: var(--bad);
+  background: rgba(255, 90, 110, 0.1);
+}
+
+#panel .statement p {
+  margin: 0 0 8px;
+}
+
+#panel .problem code,
+#panel .results code {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+#panel .statement code,
+#panel .constraints code {
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--sc-plum-3);
+  color: var(--sc-pink-soft);
+}
+
+#panel .example,
+#panel .constraints {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+#panel .example-title {
+  margin-bottom: 4px;
+  color: var(--sc-pink-soft);
+  font: 400 16px/1.4 var(--sc-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+#panel .constraints ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+#panel .hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+#panel .kv {
+  display: flex;
+  gap: 10px;
+  padding: 2px 0;
+}
+
+#panel .kv .k {
+  flex: 0 0 90px;
+  color: var(--muted);
+}
+
+#panel .kv .v {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- editor ---------- */
+#panel .toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#panel .toolbar .language {
+  color: var(--sc-pink-soft);
+  font: 400 16px/1.3 var(--sc-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+#panel .toolbar .runtime {
+  flex: 1;
+  min-width: 0;
+}
+
+#panel .runtime[data-status='ready'] {
+  color: var(--good);
+}
+
+#panel .runtime[data-status='error'] {
+  color: var(--bad);
+}
+
+#panel .editor {
+  height: clamp(240px, 38vh, 440px);
+  border: 1px solid var(--line);
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+#panel .editor .cm-editor.cm-focused {
+  outline: 1px solid var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(255, 45, 149, 0.25);
+}
+
+#panel .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+#panel .note {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ---------- buttons: pink pills ---------- */
+/* One fixed height for every button, text centred in it, so a button's content
+   (e.g. a glyph from a fallback font) can never make one taller than another. */
+#panel .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 3px 22px 0; /* the 3px nudges the capitals to look vertically centred */
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: 400 19px/1 var(--sc-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s, transform 0.15s, filter 0.2s;
+}
+
+/* the play arrow on Run is drawn here instead of typed, so it does not depend on
+   which fallback font the system picks for a "▸" character */
+#panel .btn.run::before {
+  content: '';
+  flex: none;
+  width: 0.55em;
+  height: 0.65em;
+  margin: -2px 0.55em 0 0;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+#panel .btn.primary {
+  background: var(--sc-gradient);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(60, 0, 40, 0.35);
+  box-shadow: var(--sc-glow);
+}
+
+#panel .btn.primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 0 24px rgba(255, 45, 149, 0.85);
+  transform: translateY(-1px);
+}
+
+#panel .btn.secondary {
+  background: transparent;
+  color: var(--sc-pink-soft);
+  border-color: rgba(255, 45, 149, 0.7);
+}
+
+#panel .btn.secondary:hover:not(:disabled) {
+  background: rgba(255, 45, 149, 0.14);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(255, 45, 149, 0.4);
+  transform: translateY(-1px);
+}
+
+#panel .btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+#panel .btn:focus-visible,
+#panel .tab:focus-visible,
+#panel .link-button:focus-visible {
+  outline: 2px solid var(--sc-pink-soft);
+  outline-offset: 2px;
+}
+
+#panel .btn.small {
+  height: 32px;
+  padding: 3px 16px 0;
+  font-size: 17px;
+}
+
+#panel .btn:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+#panel .link-button {
+  border: 0;
+  background: none;
+  color: var(--sc-pink-soft);
+  font: 500 12px var(--sc-font-body);
+  cursor: pointer;
+}
+
+#panel .link-button:hover:not(:disabled) {
+  color: #fff;
+  text-decoration: underline;
+}
+
+#panel .link-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- results ---------- */
+#panel .results:empty {
+  display: none;
+}
+
+#panel .banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+#panel .banner-text {
+  flex: 1;
+}
+
+#panel .banner.success {
+  color: var(--good);
+  background: rgba(62, 224, 161, 0.1);
+  border-color: rgba(62, 224, 161, 0.4);
+}
+
+#panel .banner.error {
+  color: var(--bad);
+  background: rgba(255, 90, 110, 0.1);
+  border-color: rgba(255, 90, 110, 0.4);
+}
+
+#panel .banner.info {
+  color: var(--text);
+  background: var(--bg-2);
+}
+
+#panel .tip {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+#panel .test-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#panel .test {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+#panel .test summary,
+#panel .hidden-test {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  list-style: none;
+}
+
+#panel .test summary {
+  cursor: pointer;
+}
+
+#panel .test summary::-webkit-details-marker {
+  display: none;
+}
+
+#panel .mark {
+  width: 16px;
+  text-align: center;
+  font-weight: 700;
+}
+
+#panel .test.pass .mark {
+  color: var(--good);
+}
+
+#panel .test.fail .mark,
+#panel .test.fail .verdict {
+  color: var(--bad);
+}
+
+#panel .test.tle .mark,
+#panel .test.tle .verdict {
+  color: var(--warn);
+}
+
+#panel .test.skipped {
+  opacity: 0.6;
+}
+
+#panel .verdict,
+#panel .ms {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#panel .ms {
+  margin-left: auto;
+}
+
+#panel .test-body {
+  padding: 6px 12px 10px 38px;
+  border-top: 1px solid var(--line);
+}
+
+#panel .printed,
+#panel .error-box {
+  margin: 4px 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  background: var(--bg-3);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+#panel .error-box {
+  color: #ffb4bd;
+}

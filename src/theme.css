@@ -1,0 +1,37 @@
+/* StripCode theme: neon pink on deep plum, with marquee-style type.
+   Shared by the panel, the progress bar and the buttons. */
+
+/* Fonts are bundled (not loaded from a CDN), so they work offline */
+@import '@fontsource/bebas-neue/latin-400.css';
+@import '@fontsource/pacifico/latin-400.css';
+@import '@fontsource/poppins/latin-400.css';
+@import '@fontsource/poppins/latin-500.css';
+@import '@fontsource/poppins/latin-600.css';
+
+:root {
+  /* type: tall marquee capitals, a neon script for titles, a clean body face */
+  --sc-font-display: 'Bebas Neue', 'Oswald', Impact, 'Arial Narrow', sans-serif;
+  --sc-font-script: 'Pacifico', 'Brush Script MT', cursive;
+  --sc-font-body: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sc-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* colour */
+  --sc-pink: #ff2d95;
+  --sc-pink-soft: #ff8cc6;
+  --sc-violet: #b14cff;
+  --sc-gold: #ffd36b;
+  --sc-mint: #3ee0a1;
+  --sc-red: #ff5a6e;
+
+  --sc-plum-0: #0f0616;
+  --sc-plum-1: #160a1e;
+  --sc-plum-2: #201129;
+  --sc-plum-3: #2e1a3b;
+  --sc-line: #43265a;
+  --sc-text: #fbeefa;
+  --sc-muted: #bba2c0;
+
+  /* the pink-to-violet sweep used on primary buttons */
+  --sc-gradient: linear-gradient(135deg, #ff2d95 0%, #d63bd0 60%, #b14cff 100%);
+  --sc-glow: 0 0 14px rgba(255, 45, 149, 0.55);
+}
