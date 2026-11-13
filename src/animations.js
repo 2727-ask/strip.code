@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 
+
 /** Fetch and parse one clip. `onProgress(fraction)` reports the download. */
 export async function loadClip(url, onProgress = () => {}) {
   const response = await fetch(url);
